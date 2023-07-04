@@ -6,11 +6,9 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
 jobs:
   setup-bun:
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
     strategy:
       matrix:
         os:
