@@ -7,7 +7,7 @@
     "start": "bun run src/index.ts"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "^0.6.12"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
