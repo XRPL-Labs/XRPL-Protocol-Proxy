@@ -1,0 +1,19 @@
+{
+  "name": "xrplp-cluster",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "redis": "^4.6.7",
+    "redis-token-bucket-ratelimiter": "git://github.com/WietseWind/node-redis-token-bucket-ratelimiter.git"
+  }
+}
