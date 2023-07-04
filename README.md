@@ -1,4 +1,4 @@
-# xrplp-cluster (XRPLCluster 2.0)
+# XRP Ledger Protocol Proxy (XRPLCluster 2.0)
 
 To install dependencies:
 
