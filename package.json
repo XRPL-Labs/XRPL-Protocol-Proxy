@@ -4,13 +4,17 @@
   "type": "module",
   "scripts": {
     "dev": "bun run --watch src/index.ts",
-    "start": "bun run src/index.ts"
+    "devtest": "bun run --watch src/test.ts",
+    "start": "bun run src/index.ts",
+    "lint": "eslint"
   },
   "devDependencies": {
-    "bun-types": "^0.6.12"
+    "bun-types": "^0.6.13",
+    "eslint": "^8.44.0",
+    "prettier": "^3.0.0"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": ""
   },
   "dependencies": {
     "redis": "^4.6.7",
