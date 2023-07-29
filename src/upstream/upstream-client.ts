@@ -18,15 +18,15 @@ export interface UpstreamOptions {
   readyTimeout: number;
 }
 
-type UpstreamClientMetadata = {
+export type UpstreamClientMetadata = {
   type: keyof UpstreamTypes;
-};
+} & AnyJson;
 
 type UpstreamClientEvents = {
   alive: [isAlive: boolean, instance: UpstreamClient];
 };
 
-type AnyJson = {
+export type AnyJson = {
   [key: string]: any;
 };
 

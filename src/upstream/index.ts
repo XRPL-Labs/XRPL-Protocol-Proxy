@@ -1,9 +1,15 @@
 import { EventEmitter } from 'events';
 import { log } from '../logging';
-import { UpstreamClient, UpstreamTypes } from './upstream-client';
+import {
+  UpstreamClient,
+  UpstreamTypes,
+  type UpstreamClientMetadata,
+  type AnyJson,
+} from './upstream-client';
+import { randomUUID } from 'crypto';
 
 type UpstreamConnectivityEvents = {
-  remove: [endpoint: string, endpointType: keyof UpstreamTypes];
+  remove: [endpoint: string, metdata: UpstreamClientMetadata];
 };
 
 const upstreamEventBus = new EventEmitter<UpstreamConnectivityEvents>();
@@ -19,10 +25,10 @@ const endpointReconnectAttempts: Record<string, number> = {};
 
 const onUpstreamReady = (online: boolean, instance: UpstreamClient) => {
   log(
-    'ALIVE STATE UPSTREAMCLIENT',
+    'ALIVE STATE UPSTREAM CLIENT',
     instance.endpoint,
-    instance.metadata.type,
-    online,
+    instance.metadata,
+    online ? 'ONLINE' : 'OFFLINE',
   );
 
   if (online) {
@@ -41,18 +47,18 @@ const onUpstreamReady = (online: boolean, instance: UpstreamClient) => {
       /**
        * Kick off reconnection attempts
        */
-      upstreamEventBus.emit(
-        'remove',
-        instance.endpoint,
-        instance.metadata.type,
-      );
+      upstreamEventBus.emit('remove', instance.endpoint, instance.metadata);
 
       upstreams[instance.metadata.type].splice(upstreamIndex, 1);
     }
   }
 };
 
-const addUpstream = (uri: string, type: keyof UpstreamTypes) => {
+const addUpstream = (
+  uri: string,
+  type: keyof UpstreamTypes,
+  metadata: AnyJson = {},
+) => {
   log('Add upstream', uri, type);
 
   if (Object.keys(endpointReconnectAttempts).indexOf(uri) < 0) {
@@ -63,7 +69,7 @@ const addUpstream = (uri: string, type: keyof UpstreamTypes) => {
     return false;
   }
 
-  const upstream = new UpstreamClient(uri, { type });
+  const upstream = new UpstreamClient(uri, { type, ...(metadata || {}) });
 
   upstream.on('alive', onUpstreamReady);
 
@@ -76,7 +82,7 @@ const addUpstream = (uri: string, type: keyof UpstreamTypes) => {
  * Reconnect
  */
 
-upstreamEventBus.on('remove', (endpoint, type) => {
+upstreamEventBus.on('remove', (endpoint, metadata) => {
   const attempt = endpointReconnectAttempts[endpoint];
   const reconnectInMs =
     attempt < 10
@@ -87,10 +93,10 @@ upstreamEventBus.on('remove', (endpoint, type) => {
       ? 30_000 // < 100 attempts: 30 seconds (half a minute)
       : 300_000; // Five minutes (offline for a long time)
 
-  log('Reconnect in ms', reconnectInMs, endpoint, type, attempt);
+  log('Reconnect in ms', reconnectInMs, endpoint, metadata, attempt);
 
   setTimeout(() => {
-    addUpstream(endpoint, type);
+    addUpstream(endpoint, metadata.type, metadata);
   }, reconnectInMs);
 });
 
@@ -99,6 +105,8 @@ upstreamEventBus.on('remove', (endpoint, type) => {
  */
 const connectUplinks = () => {
   addUpstream('https://xrplcluster.com', 'currentledger');
+  // addUpstream('wss://1.2.3.4', 'pathfinding');
+  // addUpstream('wss://ws.postman-echo.com/raw', 'submission');
 };
 
 export { connectUplinks };
@@ -112,10 +120,10 @@ setInterval(() => {
     l
       .map((upstream: UpstreamClient) => {
         return {
-          type: upstream.metadata.type,
           endpoint: upstream.endpoint,
           isAlive: upstream.isAlive,
           unansweredPings: upstream.unansweredPings,
+          metdata: upstream.metadata,
         };
       })
       .filter((r) => r.isAlive),
