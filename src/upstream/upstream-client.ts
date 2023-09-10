@@ -125,6 +125,14 @@ class UpstreamClient extends EventEmitter<UpstreamClientEvents> {
         },
       });
 
+      this.socket.addEventListener('ping', () => {
+        try {
+          this.socket?.pong()
+        } catch (e) {
+          // Error sending pong
+        }
+      })
+
       // message is received
       this.socket.addEventListener('message', (event) => {
         const data: XrplProtocolComandResponse = JSON.parse(
@@ -265,10 +273,11 @@ class UpstreamClient extends EventEmitter<UpstreamClientEvents> {
    */
   startKeepalive() {
     this.keepaliveInterval = setInterval(() => {
-      if (this.socket && this.socket.readyState === this.socket.OPEN) {
+      if (this.socket && this.socket.readyState === WebSocket.OPEN) {
         /**
          * Send a PING to keep the connection alive
          */
+        this.socket.ping()
         this.sendRaw({
           id: {
             suppressResponse: true,
